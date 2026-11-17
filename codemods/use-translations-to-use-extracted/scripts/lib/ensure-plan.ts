@@ -3,6 +3,7 @@ import path from 'node:path';
 import {acquireLock, getState, setState} from 'codemod:workflow';
 import {buildApplyPlan} from './build-plan.ts';
 import {loadCatalogs} from './catalog.ts';
+import {collectFindingsFromTree} from './collect-findings.ts';
 import {pathExists} from './fs-exists.ts';
 import {assertCatalogsSupported, assertNextIntlSupportsPo} from './guards.ts';
 import {readParams} from './params.ts';
@@ -23,13 +24,20 @@ function loadFindings(root: string): FindingsFile {
   if (fromState && Object.keys(fromState.files).length > 0) return fromState;
 
   const file = findingsPath(root);
-  if (!pathExists(file)) {
-    throw new Error(
-      `Missing findings at ${file}. Did the mine step run?\n` +
-        `Under --dry-run, findings are written to disk (workflow state is not persisted across steps).`
-    );
+  if (pathExists(file)) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(file, 'utf8')) as FindingsFile;
+      if (parsed?.files && Object.keys(parsed.files).length > 0) return parsed;
+    } catch {
+      // fall through to tree walk
+    }
   }
-  return JSON.parse(fs.readFileSync(file, 'utf8')) as FindingsFile;
+
+  // `--dry-run` does not persist workflow state across steps and routes `fs`
+  // through a per-step virtual overlay, so mine cannot hand off findings.
+  // Re-mine from the tree inside apply (best-effort without semantic analysis).
+  console.log('findings missing from state/disk; scanning project for useTranslations/getTranslations');
+  return collectFindingsFromTree(root);
 }
 
 function loadPlanFromDisk(root: string): {plan: ApplyPlan; byFile: Record<string, FilePlan>} | null {

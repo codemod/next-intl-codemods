@@ -1,6 +1,6 @@
 {
   "name": "use-translations-to-use-extracted",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Migrate next-intl useTranslations/getTranslations to useExtracted/getExtracted",
   "type": "module",
   "scripts": {

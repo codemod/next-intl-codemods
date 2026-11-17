@@ -14,10 +14,10 @@ Prefer a clean working tree: commit or stash first, then review with `git diff`.
 Do **not** run this against the registry package repo itself — point `-t` at the app that
 owns the catalogs (override with `--param messages=…` / `--param sourceLocale=…` if needed).
 
-`--dry-run` prevents **apply** from writing source files and skips writing extraction catalogs;
-plan/report under `.codemod-next-intl/` are still produced. If plan building fails on the first
-apply file, nothing in `src/` is rewritten. Dry-run also skips persisting workflow state across
-steps, so the mine step always writes `findings.json` for apply to read.
+`--dry-run` prevents **apply** from writing source files and skips writing extraction catalogs.
+The CLI also skips persisting workflow state across steps and blocks real-disk `fs` writes, so the
+mine → apply handoff cannot use state or `findings.json`; apply re-scans the tree instead. Prefer a
+non-dry-run run on a clean branch for the full semantic mine pass.
 
 ## What it does
 
