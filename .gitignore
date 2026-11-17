@@ -1,0 +1,9 @@
+node_modules/
+.pnpm-store/
+dist/
+.DS_Store
+**/.DS_Store
+.golden/
+*.tsbuildinfo
+.codemod-next-intl/
+.cursor/

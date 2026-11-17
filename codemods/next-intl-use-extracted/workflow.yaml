@@ -1,0 +1,85 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/codemod/codemod/refs/heads/main/schemas/workflow.json
+
+version: '1'
+
+params:
+  schema:
+    messages:
+      name: 'Messages pattern'
+      description: 'Old catalogs pattern with {locale}, e.g. messages/{locale}.json'
+      type: string
+    sourceLocale:
+      name: 'Source locale'
+      description: 'Locale whose texts become inline messages'
+      type: string
+    out:
+      name: 'Output directory'
+      description: 'Where to write extraction catalogs'
+      type: string
+      default: 'messages'
+    format:
+      name: 'Catalog format'
+      description: 'Extraction catalog format'
+      type: string
+      default: 'po'
+      oneOf:
+        - type: string
+          enum: ['po', 'json']
+    namespace:
+      name: 'Namespace strategy'
+      description: 'none | first-segment | keep'
+      type: string
+      default: 'none'
+      oneOf:
+        - type: string
+          enum: ['none', 'first-segment', 'keep']
+
+nodes:
+  - id: mine
+    name: Mine translation bindings
+    type: automatic
+    steps:
+      - name: Discover useTranslations/getTranslations call sites
+        js-ast-grep:
+          js_file: scripts/mine.ts
+          language: 'tsx'
+          semantic_analysis: workspace
+          include:
+            - '**/*.tsx'
+            - '**/*.ts'
+            - '**/*.jsx'
+            - '**/*.js'
+          exclude:
+            - '**/node_modules/**'
+            - '**/.next/**'
+            - '**/dist/**'
+            - '**/build/**'
+
+  - id: write-catalogs
+    name: Plan messages and write catalogs
+    type: automatic
+    depends_on: [mine]
+    steps:
+      - name: Build plan.json and extraction catalogs
+        run: node --experimental-strip-types "$CODEMOD_PATH/scripts/write-catalogs.ts"
+
+  - id: apply
+    name: Apply AST rewrites
+    type: automatic
+    depends_on: [write-catalogs]
+    steps:
+      - name: Rewrite hooks, calls, and imports
+        js-ast-grep:
+          js_file: scripts/apply.ts
+          language: 'tsx'
+          semantic_analysis: workspace
+          include:
+            - '**/*.tsx'
+            - '**/*.ts'
+            - '**/*.jsx'
+            - '**/*.js'
+          exclude:
+            - '**/node_modules/**'
+            - '**/.next/**'
+            - '**/dist/**'
+            - '**/build/**'
