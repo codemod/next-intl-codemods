@@ -1,16 +1,15 @@
 /**
- * Pass 3: apply plan.json AST/text rewrites.
+ * Pass 2: build plan once (from mined findings), write catalogs, then rewrite sources.
+ * No semantic analysis — plan offsets + @jssg/utils import helpers are enough.
  */
-import fs from 'node:fs';
 import path from 'node:path';
 import type {Transform} from 'codemod:ast-grep';
 import type TSX from 'codemod:ast-grep/langs/tsx';
 import {useMetricAtom} from 'codemod:metrics';
 import {applyFilePlanToSource} from './lib/apply-text.ts';
-import {pathExists} from './lib/fs-exists.ts';
-import {planPath} from './lib/paths.ts';
+import {ensurePlan} from './lib/ensure-plan.ts';
 import {projectRootFromOptions} from './lib/project-root.ts';
-import type {ApplyPlan, FilePlan} from './lib/types.ts';
+import type {FilePlan} from './lib/types.ts';
 
 const converted = useMetricAtom('next_intl_call_converted');
 const bindingMetric = useMetricAtom('next_intl_binding');
@@ -20,23 +19,16 @@ function metricPath(filename: string, projectRoot: string): string {
   return rel && !rel.startsWith('..') ? rel.split(path.sep).join('/') : filename;
 }
 
-function loadPlan(root: string): ApplyPlan | null {
-  const file = planPath(root);
-  if (!pathExists(file)) return null;
-  return JSON.parse(fs.readFileSync(file, 'utf8')) as ApplyPlan;
-}
-
-function normalizePath(p: string): string {
-  return path.resolve(p);
-}
-
 const transform: Transform<TSX> = async (root, options) => {
   const filename = root.filename();
   const projectRoot = projectRootFromOptions(options, filename);
-  const plan = loadPlan(projectRoot);
-  if (!plan) return null;
+  const {byFile} = ensurePlan({
+    targetDir: projectRoot,
+    params: options?.params,
+    dryRun: options?.dryRun === true
+  });
 
-  const filePlan = plan.files.find((f) => normalizePath(f.file) === normalizePath(filename));
+  const filePlan = byFile[path.resolve(filename)];
   if (!filePlan) return null;
 
   const fileKey = metricPath(filename, projectRoot);

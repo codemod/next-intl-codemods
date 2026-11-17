@@ -56,39 +56,22 @@ nodes:
             - '**/.next/**'
             - '**/dist/**'
             - '**/build/**'
+            - '**/.codemod-next-intl/**'
+            - '**/*.d.ts'
+            - '**/vitest.config.*'
+            - '**/next-env.d.ts'
 
-  - id: write-catalogs
-    name: Plan messages and write catalogs
+  - id: apply
+    name: Plan catalogs and rewrite sources
     type: automatic
     depends_on: [mine]
     steps:
-      # JSSG so @formatjs / @eloqnt are Rolldown-bundled at publish (no shell npm install).
-      # Runs once per workflow via PLAN_READY_STATE lock inside the script.
-      - name: Build plan.json and extraction catalogs
-        js-ast-grep:
-          js_file: scripts/write-catalogs.ts
-          language: 'tsx'
-          include:
-            - '**/*.tsx'
-            - '**/*.ts'
-            - '**/*.jsx'
-            - '**/*.js'
-          exclude:
-            - '**/node_modules/**'
-            - '**/.next/**'
-            - '**/dist/**'
-            - '**/build/**'
-
-  - id: apply
-    name: Apply AST rewrites
-    type: automatic
-    depends_on: [write-catalogs]
-    steps:
+      # No semantic_analysis: apply uses the plan + @jssg/utils only.
+      # Plan/catalogs are built once on the first file (ensurePlan).
       - name: Rewrite hooks, calls, and imports
         js-ast-grep:
           js_file: scripts/apply.ts
           language: 'tsx'
-          semantic_analysis: workspace
           include:
             - '**/*.tsx'
             - '**/*.ts'
@@ -99,3 +82,7 @@ nodes:
             - '**/.next/**'
             - '**/dist/**'
             - '**/build/**'
+            - '**/.codemod-next-intl/**'
+            - '**/*.d.ts'
+            - '**/vitest.config.*'
+            - '**/next-env.d.ts'

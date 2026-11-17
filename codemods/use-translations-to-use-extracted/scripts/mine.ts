@@ -1,34 +1,23 @@
 /**
- * Pass 1: mine translation bindings into workflow state + findings.json artifact.
+ * Pass 1: mine translation bindings into workflow state.
+ * Findings are kept in memory/state only during the scan — flushed to disk once
+ * when the apply step builds the plan (avoids O(n²) JSON rewrites).
  */
-import fs from 'node:fs';
 import path from 'node:path';
 import type {Transform} from 'codemod:ast-grep';
 import type TSX from 'codemod:ast-grep/langs/tsx';
 import {useMetricAtom} from 'codemod:metrics';
 import {acquireLock, getState, setState} from 'codemod:workflow';
-import {pathExists} from './lib/fs-exists.ts';
 import {mineFile} from './lib/mine-ast.ts';
-import {artifactDir, findingsPath} from './lib/paths.ts';
 import {projectRootFromOptions} from './lib/project-root.ts';
+import {FINDINGS_STATE} from './lib/state-keys.ts';
 import type {FindingsFile} from './lib/types.ts';
 
 const mined = useMetricAtom('next_intl_binding_mined');
 
-const FINDINGS_STATE = 'next_intl_findings';
-
 function metricPath(filename: string, projectRoot: string): string {
   const rel = path.relative(projectRoot, filename);
   return rel && !rel.startsWith('..') ? rel.split(path.sep).join('/') : filename;
-}
-
-function readFindings(file: string): FindingsFile {
-  if (!pathExists(file)) return {files: {}};
-  try {
-    return JSON.parse(fs.readFileSync(file, 'utf8')) as FindingsFile;
-  } catch {
-    return {files: {}};
-  }
 }
 
 const transform: Transform<TSX> = async (root, options) => {
@@ -45,17 +34,17 @@ const transform: Transform<TSX> = async (root, options) => {
     });
   }
 
+  // No bindings and no unresolved mentions: skip state write.
+  if (findings.bindings.length === 0 && !findings.unresolvedHookMentions) {
+    return null;
+  }
+
   const release = acquireLock(FINDINGS_STATE);
   try {
     const existing = (getState<FindingsFile>(FINDINGS_STATE) ?? {files: {}}) as FindingsFile;
     existing.files[file] = findings;
+    // Persist so the apply step (next workflow node) can read findings.
     setState(FINDINGS_STATE, existing, true);
-
-    const dir = artifactDir(projectRoot);
-    fs.mkdirSync(dir, {recursive: true});
-    const onDisk = readFindings(findingsPath(projectRoot));
-    onDisk.files[file] = findings;
-    fs.writeFileSync(findingsPath(projectRoot), JSON.stringify(onDisk, null, 2));
   } finally {
     release();
   }

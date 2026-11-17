@@ -15,8 +15,8 @@ Do **not** run this against the registry package repo itself — point `-t` at t
 owns the catalogs (override with `--param messages=…` / `--param sourceLocale=…` if needed).
 
 `--dry-run` prevents **apply** from writing source files and skips writing extraction catalogs;
-plan/report under `.codemod-next-intl/` are still produced. A failed write-catalogs step means
-apply never starts, so nothing in `src/` changes.
+plan/report under `.codemod-next-intl/` are still produced. If plan building fails on the first
+apply file, nothing in `src/` is rewritten.
 
 ## What it does
 
@@ -76,11 +76,11 @@ in scope — see [Compared to seob717/next-intl-codemod](#compared-to-seob717nex
 
 ## Report and metrics
 
-After **write-catalogs**, artifacts land under `.codemod-next-intl/`:
+Artifacts land under `.codemod-next-intl/` when the apply step builds the plan:
 
 | File | Contents |
 | --- | --- |
-| `findings.json` | Mined bindings (mine pass) |
+| `findings.json` | Mined bindings (flushed once at plan time) |
 | `plan.json` | Apply plan |
 | `report.json` | Skipped bindings + reasons, conflicts, `unreferencedKeys`, `keyMap` (old key → id), `valuesNotInMessage`, `normalizedKeys` |
 
@@ -95,12 +95,11 @@ skip-reason histogram, and pointers to `plan` / `report`.
 
 ## Workflow
 
-1. **mine** — JSSG + `semantic_analysis: workspace`; records findings and metrics
-2. **write-catalogs** — JSSG (once per run); builds `plan.json` / `report.json`, merges catalogs
-3. **apply** — rewrites sources from the plan with `@jssg/utils` import edits + `commitEdits`
+1. **mine** — JSSG + `semantic_analysis: workspace`; records findings in workflow state (no per-file disk rewrite)
+2. **apply** — builds `plan.json` / catalogs **once** on the first file, then rewrites sources (`@jssg/utils`, no semantic pass)
 
-All three steps are `js-ast-grep`, so npm deps are Rolldown-bundled at publish — no shell
-`node` / `npm install` steps.
+Both steps are `js-ast-grep`, so npm deps are Rolldown-bundled at publish — no shell `node` /
+`npm install` steps.
 
 ## After running
 
@@ -207,8 +206,8 @@ Fixtures: `tests/namespace-import`, `hook-alias`, `rebound-translator`, `compute
 
 ### Extra from the toolkit port
 
-- Durable `mine` → `write-catalogs` → `apply` workflow with `.codemod-next-intl/` artifacts
+- Durable `mine` → `apply` workflow with `.codemod-next-intl/` artifacts
 - Safe import edits via `@jssg/utils` (`addImport` / `removeImport` / `getImport`)
 - First-class metrics atoms
 - Registry package (`use-translations-to-use-extracted`) with param defaults (`messages`, `sourceLocale`)
-- Catalog planning as JSSG (bundled `@formatjs` / `@eloqnt`) instead of a shell Node step
+- Catalog planning bundled into apply (no extra full-tree pass / shell Node step)
