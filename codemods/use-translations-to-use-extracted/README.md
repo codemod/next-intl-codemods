@@ -10,6 +10,10 @@ npx codemod use-translations-to-use-extracted
 
 Prefer a clean working tree: commit or stash first, then review with `git diff`.
 
+`--dry-run` only prevents the **apply** step from writing source files. The mine + write-catalogs
+passes still run (and may ask to approve the Node shell steps). A failed write-catalogs step means
+apply never starts, so nothing in `src/` changes.
+
 ## What it does
 
 ```tsx

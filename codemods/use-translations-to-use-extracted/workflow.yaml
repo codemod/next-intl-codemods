@@ -62,6 +62,15 @@ nodes:
     type: automatic
     depends_on: [mine]
     steps:
+      # Shell steps are not Rolldown-bundled (unlike js-ast-grep). Install runtime
+      # deps into the cached package so Node can resolve @formatjs / @eloqnt / etc.
+      - name: Install package runtime dependencies
+        run: |
+          set -e
+          cd "$CODEMOD_PATH"
+          if [ ! -d node_modules/@formatjs/icu-messageformat-parser ]; then
+            npm install --omit=dev --no-fund --no-audit --no-package-lock
+          fi
       - name: Build plan.json and extraction catalogs
         run: node --experimental-strip-types "$CODEMOD_PATH/scripts/write-catalogs.ts"
 

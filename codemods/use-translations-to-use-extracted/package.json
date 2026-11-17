@@ -1,6 +1,6 @@
 {
   "name": "use-translations-to-use-extracted",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Migrate next-intl useTranslations/getTranslations to useExtracted/getExtracted",
   "type": "module",
   "scripts": {
@@ -11,7 +11,7 @@
     "@eloqnt/format-json": "^0.1.0",
     "@eloqnt/format-po": "^0.1.1",
     "@formatjs/icu-messageformat-parser": "^2.11.2",
-    "@jssg/utils": "catalog:"
+    "@jssg/utils": "0.0.3"
   },
   "devDependencies": {
     "@codemod.com/jssg-types": "catalog:",
