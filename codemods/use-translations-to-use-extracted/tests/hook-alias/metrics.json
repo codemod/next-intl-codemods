@@ -1,0 +1,30 @@
+{
+  "next_intl_binding": [
+    {
+      "cardinality": {
+        "file": "input.tsx",
+        "hook": "use",
+        "outcome": "converted"
+      },
+      "count": 1
+    }
+  ],
+  "next_intl_binding_mined": [
+    {
+      "cardinality": {
+        "file": "input.tsx",
+        "hook": "use",
+        "outcome": "ok"
+      },
+      "count": 1
+    }
+  ],
+  "next_intl_call_converted": [
+    {
+      "cardinality": {
+        "file": "input.tsx"
+      },
+      "count": 1
+    }
+  ]
+}

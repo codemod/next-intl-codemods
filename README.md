@@ -1,22 +1,16 @@
 # next-intl-codemods
 
-Codemod toolkit packages for [next-intl](https://next-intl.dev) migrations, published to the Codemod Registry.
+Codemod registry workspace for [next-intl](https://next-intl.dev) migrations.
 
-## Packages
+The root `package.json` is the **pnpm workspace** only. Each publishable codemod lives under
+`codemods/<slug>/` with its own `package.json`, `codemod.yaml`, and `workflow.yaml`.
 
 | Package | Description |
 | --- | --- |
-| [`codemods/next-intl-use-extracted`](./codemods/next-intl-use-extracted) | Migrate `useTranslations` / `getTranslations` → `useExtracted` / `getExtracted` |
-
-## Develop
+| [`@codemod/use-translations-to-use-extracted`](./codemods/use-translations-to-use-extracted) | `useTranslations` / `getTranslations` → `useExtracted` / `getExtracted` |
 
 ```bash
 pnpm install
 pnpm test
 pnpm check-types
-```
-
-```bash
-pnpm --filter ./codemods/next-intl-use-extracted test
-pnpm --filter ./codemods/next-intl-use-extracted check-types
 ```

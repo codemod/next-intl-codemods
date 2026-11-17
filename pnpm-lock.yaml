@@ -33,7 +33,7 @@ importers:
         specifier: ^5.9.0
         version: 5.9.3
 
-  codemods/next-intl-use-extracted:
+  codemods/use-translations-to-use-extracted:
     dependencies:
       '@eloqnt/format-json':
         specifier: ^0.1.0

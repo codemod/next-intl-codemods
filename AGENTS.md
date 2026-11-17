@@ -1,8 +1,9 @@
 # AGENTS.md
 
-This is a Codemod registry workspace for next-intl migration packages.
+Codemod registry workspace for next-intl migrations.
 
-- Use **pnpm** (`packageManager` in root `package.json`).
-- Toolkit codemods live under `codemods/<name>/` with `codemod.yaml`, `workflow.yaml`, `scripts/`, and `tests/`.
-- Before claiming done: `pnpm --filter ./codemods/<pkg> test` and `pnpm --filter ./codemods/<pkg> check-types`.
-- Codemod name in `codemod.yaml` should use the `@codemod/` scope.
+- Use **pnpm** (`packageManager` in the root `package.json`).
+- Each codemod is `codemods/<slug>/` with `codemod.yaml`, `workflow.yaml`, `scripts/`, `tests/`.
+- Root `package.json` is workspace tooling only — do not put transforms there.
+- `codemod.yaml` `name` and package `name` should both use the `@codemod/` scope.
+- Before claiming done: `pnpm --filter ./codemods/<slug> test` and `check-types`.
