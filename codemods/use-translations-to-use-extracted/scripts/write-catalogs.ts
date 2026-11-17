@@ -3,6 +3,9 @@
  *
  * JSSG entry (bundled at publish) so @formatjs / @eloqnt ship in the package —
  * no shell `node` / `npm install` step.
+ *
+ * Invoked once per workflow via PLAN_READY_STATE; always uses `options.targetDir`
+ * (not a per-file walk) so nested fixtures / package.json don't become false roots.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,27 +18,12 @@ import {pathExists} from './lib/fs-exists.ts';
 import {assertCatalogsSupported, assertNextIntlSupportsPo} from './lib/guards.ts';
 import {readParams} from './lib/params.ts';
 import {artifactDir, findingsPath, planPath, reportPath} from './lib/paths.ts';
+import {projectRootFromOptions} from './lib/project-root.ts';
 import type {ApplyPlan, FindingsFile, Report} from './lib/types.ts';
 import {writeCatalogs} from './lib/write-catalogs.ts';
 
 const FINDINGS_STATE = 'next_intl_findings';
 const PLAN_READY_STATE = 'next_intl_plan_ready';
-
-function findProjectRoot(file: string): string {
-  let dir = path.dirname(file);
-  for (;;) {
-    if (
-      pathExists(path.join(dir, '.codemod-next-intl')) ||
-      pathExists(path.join(dir, 'messages')) ||
-      pathExists(path.join(dir, 'package.json'))
-    ) {
-      return dir;
-    }
-    const parent = path.dirname(dir);
-    if (parent === dir) return path.dirname(file);
-    dir = parent;
-  }
-}
 
 function loadFindings(root: string): FindingsFile {
   const fromState = getState<FindingsFile>(FINDINGS_STATE);
@@ -91,7 +79,17 @@ function buildAndWrite(root: string, options: {params?: Record<string, string>; 
   const params = readParams(options.params);
 
   assertNextIntlSupportsPo({projectRoot: root, format: params.format});
-  const catalogs = loadCatalogs(params.messages, root, params.sourceLocale);
+  let catalogs;
+  try {
+    catalogs = loadCatalogs(params.messages, root, params.sourceLocale);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `${message}\n` +
+        `Looked under target directory: ${root}\n` +
+        `Pass --param messages='…/{locale}.json' and --param sourceLocale=…, and run against your Next.js app (not this codemod package).`
+    );
+  }
   assertCatalogsSupported({
     outDir: path.resolve(root, params.out),
     format: params.format,
@@ -112,7 +110,6 @@ function buildAndWrite(root: string, options: {params?: Record<string, string>; 
   fs.writeFileSync(planPath(root), JSON.stringify(plan, null, 2));
   fs.writeFileSync(reportPath(root), JSON.stringify(plan.report, null, 2));
 
-  // Always write plan/report; skip mutating extraction catalogs on dry-run.
   if (!options.dryRun) {
     writeCatalogs(plan.messages, {
       outDir: path.resolve(root, params.out),
@@ -129,16 +126,17 @@ function buildAndWrite(root: string, options: {params?: Record<string, string>; 
   return plan;
 }
 
-const transform: Transform<TSX> = async (root, options) => {
-  const projectRoot = findProjectRoot(root.filename());
+const transform: Transform<TSX> = async (_root, options) => {
   const release = acquireLock(PLAN_READY_STATE);
   try {
     if (getState<boolean>(PLAN_READY_STATE)) return null;
+    // Mark ready before work so a failure does not spam every matched file.
+    setState(PLAN_READY_STATE, true, true);
+    const projectRoot = projectRootFromOptions(options);
     buildAndWrite(projectRoot, {
       params: options?.params,
       dryRun: options?.dryRun === true
     });
-    setState(PLAN_READY_STATE, true, true);
   } finally {
     release();
   }

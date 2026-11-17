@@ -5,10 +5,14 @@ Migrates next-intl `useTranslations` / `getTranslations` call sites with **stati
 and carries existing catalog translations over so nothing has to be translated again.
 
 ```bash
-npx codemod use-translations-to-use-extracted
+# Run against your Next.js app (the folder that contains messages/{locale}.json)
+npx codemod use-translations-to-use-extracted -t .
 ```
 
 Prefer a clean working tree: commit or stash first, then review with `git diff`.
+
+Do **not** run this against the registry package repo itself — point `-t` at the app that
+owns the catalogs (override with `--param messages=…` / `--param sourceLocale=…` if needed).
 
 `--dry-run` prevents **apply** from writing source files and skips writing extraction catalogs;
 plan/report under `.codemod-next-intl/` are still produced. A failed write-catalogs step means
