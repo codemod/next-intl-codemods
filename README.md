@@ -7,7 +7,7 @@ The root `package.json` is the **pnpm workspace** only. Each publishable codemod
 
 | Package | Description |
 | --- | --- |
-| [`@codemod/use-translations-to-use-extracted`](./codemods/use-translations-to-use-extracted) | `useTranslations` / `getTranslations` → `useExtracted` / `getExtracted` |
+| [`use-translations-to-use-extracted`](./codemods/use-translations-to-use-extracted) | `useTranslations` / `getTranslations` → `useExtracted` / `getExtracted` |
 
 ```bash
 pnpm install

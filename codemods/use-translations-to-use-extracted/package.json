@@ -1,10 +1,10 @@
 {
-  "name": "@codemod/use-translations-to-use-extracted",
-  "version": "0.1.1",
+  "name": "use-translations-to-use-extracted",
+  "version": "0.2.0",
   "description": "Migrate next-intl useTranslations/getTranslations to useExtracted/getExtracted",
   "type": "module",
   "scripts": {
-    "test": "npx --yes codemod@latest jssg test -l tsx ./scripts/codemod.ts --semantic-workspace --strictness loose --allow-fs && vitest run",
+    "test": "npx --yes codemod jssg test -l tsx ./scripts/codemod.ts --semantic-workspace --strictness loose --allow-fs && vitest run",
     "check-types": "tsc --noEmit"
   },
   "dependencies": {

@@ -64,15 +64,43 @@ function main() {
     locales: catalogs.locales
   });
 
+  const {report} = plan;
   console.log(
     [
-      `files: ${plan.report.files.changed}/${plan.report.files.scanned} changed`,
-      `bindings: ${plan.report.bindings.converted} converted, ${plan.report.bindings.skipped} skipped`,
-      `calls: ${plan.report.calls.converted} converted`,
-      `messages: ${plan.report.messages.total}`,
-      `plan: ${planPath(root)}`
+      `files: ${report.files.changed}/${report.files.scanned} changed`,
+      `bindings: ${report.bindings.converted} converted, ${report.bindings.skipped} skipped`,
+      `calls: ${report.calls.converted} converted`,
+      `messages: ${report.messages.total} (${report.messages.explicitIds} with explicit ids from ${report.conflicts.length} conflicting texts)`,
+      `old keys never referenced statically: ${report.unreferencedKeys.length}`,
+      `plan: ${planPath(root)}`,
+      `report: ${reportPath(root)}`
     ].join('\n')
   );
+
+  const reasons = new Map<string, number>();
+  for (const binding of report.skipped) {
+    for (const problem of binding.problems) {
+      const reason = problem.reason.split(':')[0]!;
+      reasons.set(reason, (reasons.get(reason) ?? 0) + 1);
+    }
+  }
+  if (reasons.size > 0) {
+    console.log('skipped because:');
+    for (const [reason, count] of [...reasons].sort((a, b) => b[1] - a[1])) {
+      console.log(`  ${count}× ${reason}`);
+    }
+  }
+  if (report.valuesNotInMessage.length > 0) {
+    console.log(
+      `calls passing values the source text does not declare (expect tsc errors, see report): ${report.valuesNotInMessage.length}`
+    );
+  }
+  if (report.files.withoutNextIntlImport.length > 0) {
+    console.log(
+      `files mentioning the hooks without a resolvable next-intl origin (left untouched): ${report.files.withoutNextIntlImport.length}`
+    );
+  }
+  console.log(`wrote ${catalogs.locales.length} catalogs to ${params.out}`);
 }
 
 main();
