@@ -17,13 +17,13 @@ catalogs (`po` or `json`).
 
 ## Workflow parameters
 
-| Param | Required | Default | Description |
-| --- | --- | --- | --- |
-| `messages` | yes | — | Old catalogs with `{locale}` (e.g. `messages/{locale}.json`) |
-| `sourceLocale` | yes | — | Locale whose texts become inline messages |
-| `out` | no | `messages` | Extraction catalog output directory |
-| `format` | no | `po` | `po` or `json` |
-| `namespace` | no | `none` | `none` \| `first-segment` \| `keep` |
+| Param | Default | Description |
+| --- | --- | --- |
+| `messages` | `messages/{locale}.json` | Old catalogs; `{locale}` is required |
+| `sourceLocale` | `en` | Locale whose texts become inline messages |
+| `out` | `messages` | Extraction catalog output directory |
+| `format` | `po` | `po` or `json` |
+| `namespace` | `none` | `none` \| `first-segment` \| `keep` |
 
 ## Metrics
 

@@ -1,6 +1,6 @@
 {
   "name": "@codemod/use-translations-to-use-extracted",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Migrate next-intl useTranslations/getTranslations to useExtracted/getExtracted",
   "type": "module",
   "scripts": {

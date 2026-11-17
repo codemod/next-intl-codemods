@@ -8,10 +8,12 @@ params:
       name: 'Messages pattern'
       description: 'Old catalogs pattern with {locale}, e.g. messages/{locale}.json'
       type: string
+      default: 'messages/{locale}.json'
     sourceLocale:
       name: 'Source locale'
       description: 'Locale whose texts become inline messages'
       type: string
+      default: 'en'
     out:
       name: 'Output directory'
       description: 'Where to write extraction catalogs'
