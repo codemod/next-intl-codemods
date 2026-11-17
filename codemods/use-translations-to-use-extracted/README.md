@@ -10,8 +10,8 @@ npx codemod use-translations-to-use-extracted
 
 Prefer a clean working tree: commit or stash first, then review with `git diff`.
 
-`--dry-run` only prevents the **apply** step from writing source files. The mine + write-catalogs
-passes still run (and may ask to approve the Node shell steps). A failed write-catalogs step means
+`--dry-run` prevents **apply** from writing source files and skips writing extraction catalogs;
+plan/report under `.codemod-next-intl/` are still produced. A failed write-catalogs step means
 apply never starts, so nothing in `src/` changes.
 
 ## What it does
@@ -92,8 +92,11 @@ skip-reason histogram, and pointers to `plan` / `report`.
 ## Workflow
 
 1. **mine** — JSSG + `semantic_analysis: workspace`; records findings and metrics
-2. **write-catalogs** — builds `plan.json` / `report.json`, merges catalogs, enforces safety guards
+2. **write-catalogs** — JSSG (once per run); builds `plan.json` / `report.json`, merges catalogs
 3. **apply** — rewrites sources from the plan with `@jssg/utils` import edits + `commitEdits`
+
+All three steps are `js-ast-grep`, so npm deps are Rolldown-bundled at publish — no shell
+`node` / `npm install` steps.
 
 ## After running
 
@@ -204,3 +207,4 @@ Fixtures: `tests/namespace-import`, `hook-alias`, `rebound-translator`, `compute
 - Safe import edits via `@jssg/utils` (`addImport` / `removeImport` / `getImport`)
 - First-class metrics atoms
 - Registry package (`use-translations-to-use-extracted`) with param defaults (`messages`, `sourceLocale`)
+- Catalog planning as JSSG (bundled `@formatjs` / `@eloqnt`) instead of a shell Node step

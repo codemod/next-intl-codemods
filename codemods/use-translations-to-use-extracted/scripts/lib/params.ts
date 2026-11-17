@@ -10,12 +10,26 @@ export type CodemodParams = {
 
 export function readParams(raw: unknown): CodemodParams {
   const p = (raw ?? {}) as Record<string, unknown>;
-  const messages = String(p.messages ?? process.env.NEXT_INTL_MESSAGES ?? 'messages/{locale}.json');
-  const sourceLocale = String(p.sourceLocale ?? process.env.NEXT_INTL_SOURCE_LOCALE ?? 'en');
-  const out = String(p.out ?? process.env.NEXT_INTL_OUT ?? 'messages');
-  const format = String(p.format ?? process.env.NEXT_INTL_FORMAT ?? 'po') as CatalogFormat;
+  const messages = String(
+    p.messages ??
+      process.env.CODEMOD_PARAM_messages ??
+      process.env.NEXT_INTL_MESSAGES ??
+      'messages/{locale}.json'
+  );
+  const sourceLocale = String(
+    p.sourceLocale ??
+      process.env.CODEMOD_PARAM_sourceLocale ??
+      process.env.NEXT_INTL_SOURCE_LOCALE ??
+      'en'
+  );
+  const out = String(
+    p.out ?? process.env.CODEMOD_PARAM_out ?? process.env.NEXT_INTL_OUT ?? 'messages'
+  );
+  const format = String(
+    p.format ?? process.env.CODEMOD_PARAM_format ?? process.env.NEXT_INTL_FORMAT ?? 'po'
+  ) as CatalogFormat;
   const namespace = String(
-    p.namespace ?? process.env.NEXT_INTL_NAMESPACE ?? 'none'
+    p.namespace ?? process.env.CODEMOD_PARAM_namespace ?? process.env.NEXT_INTL_NAMESPACE ?? 'none'
   ) as NamespaceStrategy;
 
   if (!messages.includes('{locale}')) {

@@ -58,8 +58,11 @@ function metricPath(filename: string, projectRoot: string): string {
 
 function resolveParams(options: {params?: unknown} | undefined, _root: string): CodemodParams {
   try {
-    if (options?.params && typeof options.params === 'object') {
-      return readParams(options.params);
+    const raw = options?.params;
+    // Empty `{}` from the harness must not pick production defaults (would write catalogs
+    // into fixture snapshots). Only honor params when the caller set at least one key.
+    if (raw && typeof raw === 'object' && Object.keys(raw as object).length > 0) {
+      return readParams(raw);
     }
   } catch {
     // fall through to fixture defaults

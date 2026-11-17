@@ -41,7 +41,7 @@ const transform: Transform<TSX> = async (root) => {
     existing.files[file] = findings;
     setState(FINDINGS_STATE, existing, true);
 
-    // Also persist to disk for the Node write-catalogs step.
+    // Also persist to disk so write-catalogs / apply can recover without state.
     const dir = artifactDir(projectRoot);
     fs.mkdirSync(dir, {recursive: true});
     const onDisk = readFindings(findingsPath(projectRoot));
