@@ -534,15 +534,33 @@ function callSiteFromCall(
   };
 }
 
+function collectSemanticRefs(nameNode: Node): Node[] {
+  const refs: Node[] = [];
+  for (const fileRefs of safeReferences(nameNode)) {
+    for (const ref of fileRefs.nodes as Node[]) refs.push(ref);
+  }
+  return refs;
+}
+
+/** Same-file identifier scan when semantic `references()` is unavailable (e.g. dry-run parse()). */
+function collectAstRefs(nameNode: Node): Node[] {
+  const name = nameNode.text();
+  if (!name) return [];
+  const program = nameNode.getRoot().root();
+  return program.findAll({
+    rule: {kind: 'identifier', regex: `^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`}
+  }) as Node[];
+}
+
 function collectAliasRoots(nameNode: Node): Node[] {
   const roots: Node[] = [nameNode];
-  for (const fileRefs of safeReferences(nameNode)) {
-    for (const ref of fileRefs.nodes as Node[]) {
-      const parent = ref.parent();
-      if (parent?.kind() === 'variable_declarator' && parent.field('value')?.id() === ref.id()) {
-        const aliasName = parent.field('name');
-        if (aliasName?.kind() === 'identifier') roots.push(aliasName);
-      }
+  const refs = collectSemanticRefs(nameNode);
+  const candidates = refs.length > 0 ? refs : collectAstRefs(nameNode);
+  for (const ref of candidates) {
+    const parent = ref.parent();
+    if (parent?.kind() === 'variable_declarator' && parent.field('value')?.id() === ref.id()) {
+      const aliasName = parent.field('name');
+      if (aliasName?.kind() === 'identifier') roots.push(aliasName);
     }
   }
   return roots;
@@ -557,15 +575,15 @@ function collectCallsForBinding(
   const seen = new Set<number>();
 
   for (const root of collectAliasRoots(nameNode)) {
-    for (const fileRefs of safeReferences(root)) {
-      for (const ref of fileRefs.nodes as Node[]) {
-        if (seen.has(ref.id())) continue;
-        seen.add(ref.id());
-        const result = classifyTranslatorUse(ref, root, source);
-        if (result === 'skip') continue;
-        if (result.problem) problems.push(result.problem);
-        if (result.call) calls.push(result.call);
-      }
+    const semantic = collectSemanticRefs(root);
+    const refs = semantic.length > 0 ? semantic : collectAstRefs(root);
+    for (const ref of refs) {
+      if (seen.has(ref.id())) continue;
+      seen.add(ref.id());
+      const result = classifyTranslatorUse(ref, root, source);
+      if (result === 'skip') continue;
+      if (result.problem) problems.push(result.problem);
+      if (result.call) calls.push(result.call);
     }
   }
   return {calls, problems};

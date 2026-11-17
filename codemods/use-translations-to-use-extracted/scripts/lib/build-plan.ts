@@ -325,12 +325,14 @@ export function buildApplyPlan(
 
 export function hookCallReplacement(rewrite: HookRewrite, localName: string): string {
   let args = '';
+  // Treat null like undefined (JSON round-trips / shared state can null omitted fields).
+  const namespace = rewrite.namespace ?? undefined;
   if (rewrite.otherHookProps) {
     const props = [...rewrite.otherHookProps];
-    if (rewrite.namespace !== undefined) props.push(`namespace: ${toStringLiteral(rewrite.namespace)}`);
+    if (namespace !== undefined) props.push(`namespace: ${toStringLiteral(namespace)}`);
     args = props.length > 0 ? `{${props.join(', ')}}` : '';
-  } else if (rewrite.namespace !== undefined) {
-    args = toStringLiteral(rewrite.namespace);
+  } else if (namespace !== undefined) {
+    args = toStringLiteral(namespace);
   }
   const callee = rewrite.namespaceObjectText
     ? `${rewrite.namespaceObjectText}.${EXTRACTED_BY_HOOK[rewrite.hook]}`
