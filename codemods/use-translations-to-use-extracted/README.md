@@ -16,7 +16,8 @@ owns the catalogs (override with `--param messages=…` / `--param sourceLocale=
 
 `--dry-run` prevents **apply** from writing source files and skips writing extraction catalogs;
 plan/report under `.codemod-next-intl/` are still produced. If plan building fails on the first
-apply file, nothing in `src/` is rewritten.
+apply file, nothing in `src/` is rewritten. Dry-run also skips persisting workflow state across
+steps, so the mine step always writes `findings.json` for apply to read.
 
 ## What it does
 
@@ -80,7 +81,7 @@ Artifacts land under `.codemod-next-intl/` when the apply step builds the plan:
 
 | File | Contents |
 | --- | --- |
-| `findings.json` | Mined bindings (flushed once at plan time) |
+| `findings.json` | Mined bindings (written during mine; required under `--dry-run`) |
 | `plan.json` | Apply plan |
 | `report.json` | Skipped bindings + reasons, conflicts, `unreferencedKeys`, `keyMap` (old key → id), `valuesNotInMessage`, `normalizedKeys` |
 
@@ -95,7 +96,7 @@ skip-reason histogram, and pointers to `plan` / `report`.
 
 ## Workflow
 
-1. **mine** — JSSG + `semantic_analysis: workspace`; records findings in workflow state (no per-file disk rewrite)
+1. **mine** — JSSG + `semantic_analysis: workspace`; accumulates findings in state and `.codemod-next-intl/findings.json`
 2. **apply** — builds `plan.json` / catalogs **once** on the first file, then rewrites sources (`@jssg/utils`, no semantic pass)
 
 Both steps are `js-ast-grep`, so npm deps are Rolldown-bundled at publish — no shell `node` /

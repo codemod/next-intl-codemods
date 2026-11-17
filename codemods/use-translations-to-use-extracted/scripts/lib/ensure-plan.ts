@@ -24,9 +24,23 @@ function loadFindings(root: string): FindingsFile {
 
   const file = findingsPath(root);
   if (!pathExists(file)) {
-    throw new Error(`Missing findings at ${file}. Did the mine step run?`);
+    throw new Error(
+      `Missing findings at ${file}. Did the mine step run?\n` +
+        `Under --dry-run, findings are written to disk (workflow state is not persisted across steps).`
+    );
   }
   return JSON.parse(fs.readFileSync(file, 'utf8')) as FindingsFile;
+}
+
+function loadPlanFromDisk(root: string): {plan: ApplyPlan; byFile: Record<string, FilePlan>} | null {
+  const file = planPath(root);
+  if (!pathExists(file)) return null;
+  try {
+    const plan = JSON.parse(fs.readFileSync(file, 'utf8')) as ApplyPlan;
+    return {plan, byFile: indexPlan(plan)};
+  } catch {
+    return null;
+  }
 }
 
 function logReport(report: Report, catalogsOut: string, localeCount: number, root: string) {
@@ -93,11 +107,18 @@ export function ensurePlan(options: {
   const cachedIndex = getState<Record<string, FilePlan>>(PLAN_BY_FILE_STATE);
   if (cachedPlan && cachedIndex) return {plan: cachedPlan, byFile: cachedIndex};
 
+  // Dry-run does not persist workflow state; reuse plan.json from the first apply file.
+  const fromDisk = loadPlanFromDisk(options.targetDir);
+  if (fromDisk) return fromDisk;
+
   const release = acquireLock(PLAN_READY_STATE);
   try {
     const againPlan = getState<ApplyPlan>(PLAN_STATE);
     const againIndex = getState<Record<string, FilePlan>>(PLAN_BY_FILE_STATE);
     if (againPlan && againIndex) return {plan: againPlan, byFile: againIndex};
+
+    const againDisk = loadPlanFromDisk(options.targetDir);
+    if (againDisk) return againDisk;
 
     const root = options.targetDir;
     const params = readParams(options.params);
