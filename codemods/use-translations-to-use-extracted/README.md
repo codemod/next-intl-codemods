@@ -5,19 +5,32 @@ Migrates next-intl `useTranslations` / `getTranslations` call sites with **stati
 and carries existing catalog translations over so nothing has to be translated again.
 
 ```bash
-# Run against your Next.js app (the folder that contains messages/{locale}.json)
-npx codemod use-translations-to-use-extracted -t .
+# Run against your Next.js app (not this package repo). Defaults shown — set what differs.
+npx codemod use-translations-to-use-extracted -t . \
+  --param messages=messages/{locale}.json \
+  --param sourceLocale=en \
+  --param out=messages \
+  --param format=po \
+  --param namespace=none
 ```
 
-Prefer a clean working tree: commit or stash first, then review with `git diff`.
-
-Do **not** run this against the registry package repo itself — point `-t` at the app that
-owns the catalogs (override with `--param messages=…` / `--param sourceLocale=…` if needed).
+Prefer a clean working tree: commit or stash first, then review with `git diff`. See
+[Workflow parameters](#workflow-parameters) for what each flag does.
 
 `--dry-run` prevents **apply** from writing source files and skips writing extraction catalogs.
 The CLI also skips persisting workflow state across steps and blocks real-disk `fs` writes, so the
 mine → apply handoff cannot use state or `findings.json`; apply re-scans the tree instead. Prefer a
 non-dry-run run on a clean branch for the full semantic mine pass.
+
+## Credits
+
+### Original author
+
+This package builds on work started by
+[ShimYuSeob (seob717)](https://github.com/seob717) in
+[seob717/next-intl-codemod](https://github.com/seob717/next-intl-codemod).
+See [Compared to seob717/next-intl-codemod](#compared-to-seob717next-intl-codemod) for how this
+registry package differs.
 
 ## What it does
 
@@ -196,7 +209,7 @@ primitives.
 Fixtures: `tests/namespace-import`, `hook-alias`, `rebound-translator`, `computed-rich`,
 `barrel-reexport`, `require-destructure`, `renamed-reexport`, `icu-escaped-braces`.
 
-### Carried over from that project (deliberately)
+### Carried over from that project
 
 - Extractor-compatible message ids and conflict clustering with explicit ids
 - Catalog merge + PO-layout / json-overlap / next-intl version guards
