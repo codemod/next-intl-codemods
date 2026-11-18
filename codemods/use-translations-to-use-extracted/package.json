@@ -1,8 +1,17 @@
 {
   "name": "use-translations-to-use-extracted",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Migrate next-intl useTranslations/getTranslations to useExtracted/getExtracted",
   "type": "module",
+  "author": "Codemod <support@codemod.com>",
+  "contributors": [
+    {
+      "name": "ShimYuSeob",
+      "email": "seob717@gmail.com",
+      "url": "https://github.com/seob717"
+    }
+  ],
+  "license": "MIT",
   "scripts": {
     "test": "npx --yes codemod jssg test -l tsx ./scripts/codemod.ts --semantic-workspace --strictness loose --allow-fs && vitest run",
     "check-types": "tsc --noEmit"

@@ -2,9 +2,9 @@
 
 Codemod registry workspace for [next-intl](https://next-intl.dev) migrations.
 
-Licensed under the [MIT License](./LICENSE). Portions adapted from
-[seob717/next-intl-codemod](https://github.com/seob717/next-intl-codemod)
-(Copyright (c) 2026 seob717).
+Licensed under the [MIT License](./LICENSE).
+Copyright (c) 2026 Codemod Inc. and seob717.
+Originally started by [seob717](https://github.com/seob717/next-intl-codemod).
 
 The root `package.json` is the **pnpm workspace** only. Each publishable codemod lives under
 `codemods/<slug>/` with its own `package.json`, `codemod.yaml`, and `workflow.yaml`.
